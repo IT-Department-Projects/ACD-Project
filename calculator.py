@@ -12,7 +12,7 @@ class Token(object):
 	def __repr__(self):
 		return self.__str__()
 
-class Interpreter(object):
+class Lexer(object):
 	def __init__(self,text):
 		self.text=text
 		self.pos=0
@@ -68,56 +68,64 @@ class Interpreter(object):
 			self.error()
 		return Token(EOF,None)
 
-	def eat(self,token_type):
+
+
+class Interpreter(object):
+	def __init__(self,lexer):
+		self.lexer=lexer
+		self.current_token=self.lexer.get_next_token()
+
+	def error(self):
+		raise Exception('Invalid syntax')
+
+	def eat(self, token_type):
 		if self.current_token.type == token_type:
-			self.current_token=self.get_next_token()
+			self.current_token = self.lexer.get_next_token()
 		else:
 			self.error()
 
+	def factor(self):
+		token=self.current_token
+		self.eat(INTEGER)
+		return token.value
+
 	def expr(self):
-		self.current_token=self.get_next_token()
+		result=self.factor()
 
-		left=self.current_token
-		self.eat(INTEGER)
+		while self.current_token.type in (PLUS,MINUS,MULTIPLICATION,DIVISION):
+			token=self.current_token
+			if token.type == PLUS:
+				self.eat(PLUS)
+				result=result+self.factor()
 
-		op=self.current_token
-		if op.type == PLUS:
-			self.eat(PLUS)
-		elif op.type == MINUS:
-			self.eat(MINUS)
-		elif op.type == MULTIPLICATION:
-			self.eat(MULTIPLICATION)
-		else:
-			self.eat(DIVISION)
+			elif token.type == MINUS:
+				self.eat(MINUS)
+				result=result-self.factor()
 
-		right=self.current_token
-		self.eat(INTEGER)
+			elif token.type == MULTIPLICATION:
+				self.eat(MULTIPLICATION)
+				result=result*self.factor()
 
-		if op.type == PLUS:	
-			result=left.value+right.value
+			elif token.type == DIVISION:
+				self.eat(DIVISION)
+				result=result/self.factor()
 
-		elif op.type == MINUS:
-			result=left.value-right.value
-
-		elif op.type == MULTIPLICATION:
-			result=left.value*right.value
-
-		else:
-			result=left.value/right.value
-			
 		return result
+
 
 def main():
 	while True:
 		try:
-			text=input('calc> ')
+			text = input('calc> ')
 		except EOFError:
 			break
 		if not text:
 			continue
-		interpreter=Interpreter(text)
-		result=interpreter.expr()
+		lexer=Lexer(text)
+		interpreter = Interpreter(lexer)
+		result = interpreter.expr()
 		print(result)
+
 
 if __name__ == '__main__':
 	main()
