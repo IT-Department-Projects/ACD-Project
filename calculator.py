@@ -89,26 +89,34 @@ class Interpreter(object):
 		self.eat(INTEGER)
 		return token.value
 
-	def expr(self):
+	def term(self):
 		result=self.factor()
 
-		while self.current_token.type in (PLUS,MINUS,MULTIPLICATION,DIVISION):
+		while self.current_token.type in (MULTIPLICATION,DIVISION):
 			token=self.current_token
-			if token.type == PLUS:
-				self.eat(PLUS)
-				result=result+self.factor()
 
-			elif token.type == MINUS:
-				self.eat(MINUS)
-				result=result-self.factor()
-
-			elif token.type == MULTIPLICATION:
+			if token.type == MULTIPLICATION:
 				self.eat(MULTIPLICATION)
 				result=result*self.factor()
 
 			elif token.type == DIVISION:
 				self.eat(DIVISION)
 				result=result/self.factor()
+
+		return result
+
+	def expr(self):
+		result=self.term()
+
+		while self.current_token.type in (PLUS,MINUS):
+			token=self.current_token
+			if token.type == PLUS:
+				self.eat(PLUS)
+				result=result+self.term()
+
+			elif token.type == MINUS:
+				self.eat(MINUS)
+				result=result-self.term()
 
 		return result
 
