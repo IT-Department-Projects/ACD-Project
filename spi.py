@@ -780,8 +780,17 @@ class Interpreter(NodeVisitor):
         elif node.op.type == MUL:
             return self.visit(node.left) * self.visit(node.right)
         elif node.op.type == INTEGER_DIV:
+            if(node.right == 0):
+                raise Exception(
+                "Error: Division by 0 '%s'/'%s'" % node.left, node.right
+            )    
             return self.visit(node.left) // self.visit(node.right)
+
         elif node.op.type == FLOAT_DIV:
+            if(node.right == 0):
+                raise Exception(
+                "Error: Division by 0 '%s'/'%s'" % node.left, node.right
+            )    
             return float(self.visit(node.left)) / float(self.visit(node.right))
 
     def visit_Num(self, node):
