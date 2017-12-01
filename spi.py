@@ -199,6 +199,8 @@ class Lexer(object):
 
 
 # Parser
+class AST(object):
+    pass
 
 
 class BinOp(AST):
@@ -238,6 +240,10 @@ class Var(AST):
         self.value = token.value
 
 
+class NoOp(AST):
+    pass
+
+
 class Program(AST):
     def __init__(self, name, block):
         self.name = name
@@ -271,7 +277,7 @@ class Param(AST):
 class ProcedureDecl(AST):
     def __init__(self, proc_name, params, block_node):
         self.proc_name = proc_name
-        self.params = params
+        self.params = params  
         self.block_node = block_node
 
 
@@ -306,7 +312,7 @@ class Parser(object):
         return node
 
     def declarations(self):
-
+        
         declarations = []
 
         while True:
@@ -361,7 +367,7 @@ class Parser(object):
 
 
     def formal_parameter_list(self):
-
+        
         if not self.current_token.type == ID:
             return []
 
@@ -393,7 +399,7 @@ class Parser(object):
         return var_declarations
 
     def type_spec(self):
-
+        
         token = self.current_token
         if self.current_token.type == INTEGER:
             self.eat(INTEGER)
@@ -403,7 +409,7 @@ class Parser(object):
         return node
 
     def compound_statement(self):
-
+        
         self.eat(BEGIN)
         nodes = self.statement_list()
         self.eat(END)
@@ -415,7 +421,7 @@ class Parser(object):
         return root
 
     def statement_list(self):
-
+        
         node = self.statement()
 
         results = [node]
@@ -427,7 +433,7 @@ class Parser(object):
         return results
 
     def statement(self):
-
+        
         if self.current_token.type == BEGIN:
             node = self.compound_statement()
         elif self.current_token.type == ID:
@@ -437,7 +443,7 @@ class Parser(object):
         return node
 
     def assignment_statement(self):
-
+        
         left = self.variable()
         token = self.current_token
         self.eat(ASSIGN)
@@ -446,7 +452,7 @@ class Parser(object):
         return node
 
     def variable(self):
-
+        
         node = Var(self.current_token)
         self.eat(ID)
         return node
@@ -455,7 +461,7 @@ class Parser(object):
         return NoOp()
 
     def expr(self):
-
+        
         node = self.term()
 
         while self.current_token.type in (PLUS, MINUS):
@@ -670,6 +676,9 @@ class SemanticAnalyzer(NodeVisitor):
         for child in node.children:
             self.visit(child)
 
+    def visit_NoOp(self, node):
+        pass
+
     def visit_BinOp(self, node):
         self.visit(node.left)
         self.visit(node.right)
@@ -755,6 +764,13 @@ class Interpreter(NodeVisitor):
             self.visit(declaration)
         self.visit(node.compound_statement)
 
+    def visit_VarDecl(self, node):
+        # Do nothing
+        pass
+
+    def visit_Type(self, node):
+        # Do nothing
+        pass
 
     def visit_BinOp(self, node):
         if node.op.type == PLUS:
@@ -764,17 +780,8 @@ class Interpreter(NodeVisitor):
         elif node.op.type == MUL:
             return self.visit(node.left) * self.visit(node.right)
         elif node.op.type == INTEGER_DIV:
-            if(node.right == 0):
-                raise Exception(
-                "Error: Division by 0 '%s'/'%s'" % node.left, node.right
-            )    
             return self.visit(node.left) // self.visit(node.right)
-
         elif node.op.type == FLOAT_DIV:
-            if(node.right == 0):
-                raise Exception(
-                "Error: Division by 0 '%s'/'%s'" % node.left, node.right
-            )    
             return float(self.visit(node.left)) / float(self.visit(node.right))
 
     def visit_Num(self, node):
@@ -801,6 +808,11 @@ class Interpreter(NodeVisitor):
         var_value = self.GLOBAL_MEMORY.get(var_name)
         return var_value
 
+    def visit_NoOp(self, node):
+        pass
+
+    def visit_ProcedureDecl(self, node):
+        pass
 
     def interpret(self):
         tree = self.tree
@@ -826,3 +838,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
